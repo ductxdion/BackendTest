@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Newtonsoft.Json;
 using TodoApi.Models;
 
 namespace TodoApi.Controllers
@@ -7,6 +9,12 @@ namespace TodoApi.Controllers
     [Route("api/[controller]")]
     public class MatrixController : ControllerBase
     {
+        private readonly ApplicationDbContext _context;
+
+        public MatrixController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
         [HttpPost("check")]
         public IActionResult Check([FromBody] MatrixCheckRequest request)
         {
@@ -58,6 +66,54 @@ namespace TodoApi.Controllers
             bool isEqual = ArePointsAndCellsSame(minFuelPath.Points, request.SelectedCells);
 
             return Ok(new { message = isEqual ? "OK" : "Not OK" });
+        }
+
+        [HttpPost]
+        [Route("insert")]
+        public async Task<IActionResult> InsertMatrix([FromBody] MatrixCheckRequest request)
+        {
+            if (request == null)
+            {
+                return BadRequest("Matrix data is null.");
+            }
+
+            var matrix = new Matrix
+            {
+                M = request.M,
+                N = request.N,
+                P = request.P,
+                MatrixData = JsonConvert.SerializeObject(request.Matrix),
+                MatrixName = request.MatrixName
+            };
+
+            _context.Matrices.Add(matrix);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "OK" });
+        }
+
+        [HttpDelete]
+        [Route("delete/{id}")]
+        public async Task<IActionResult> DeleteMatrix(int id)
+        {
+            var matrix = await _context.Matrices.FindAsync(id);
+            if (matrix == null)
+            {
+                return NotFound("Matrix not found.");
+            }
+
+            _context.Matrices.Remove(matrix);
+            await _context.SaveChangesAsync();
+
+            return Ok("Matrix deleted successfully.");
+        }
+
+        [HttpGet]
+        [Route("list")]
+        public async Task<IActionResult> GetMatrices()
+        {
+            var matrices = await _context.Matrices.ToListAsync();
+            return Ok(matrices);
         }
 
         private bool ArePointsAndCellsSame(List<Point> Points, List<Cell> SelectedCellsData)

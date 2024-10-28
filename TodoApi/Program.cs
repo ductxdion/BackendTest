@@ -1,5 +1,6 @@
-
-using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
+using TodoApi.Models;
 
 namespace TodoApi
 {
@@ -12,15 +13,8 @@ namespace TodoApi
             // Add services to the container.
 
             builder.Services.AddControllers();
-            // Add CORS services
-            //builder.Services.AddCors(options =>
-            //{
-            //    options.AddPolicy("AllowReactApp",
-            //        builder => builder
-            //            .WithOrigins("http://localhost:3000") // Replace with your React app's URL
-            //            .AllowAnyHeader()
-            //            .AllowAnyMethod());
-            //});
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
             builder.Services.AddCors(options =>
             {
@@ -49,7 +43,6 @@ namespace TodoApi
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
