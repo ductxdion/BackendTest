@@ -42,11 +42,12 @@ namespace TodoApi.Controllers
             }
 
             var previousLevel = new List<Path>
-        {
-            new Path(0.0, new Point(0, 0), new List<Point> { new Point(0, 0) })
-        };
+            {
+                new Path(0.0, new Point(0, 0), new List<Point> { new Point(0, 0) })
+            };
 
-            for (int i = 1; i <= p; i++)
+            var start = request.Matrix[0][0] == 1 ? 2 : 1; // Tim key tiep theo khi vi tri start la 1
+            for (int i = start; i <= p; i++)
             {
                 var currentLevel = new List<Path>();
                 foreach (var prev in previousLevel)
@@ -61,11 +62,10 @@ namespace TodoApi.Controllers
                 previousLevel = currentLevel;
             }
 
-            // 
             var minFuelPath = previousLevel.OrderBy(x => x.FuelUsed).First();
             bool isEqual = ArePointsAndCellsSame(minFuelPath.Points, request.SelectedCells);
 
-            return Ok(new { message = isEqual ? "OK" : "Not OK" });
+            return Ok(new { message = isEqual ? "OK" : "Not OK", fuelUsed = minFuelPath.FuelUsed });
         }
 
         [HttpPost]
@@ -89,7 +89,7 @@ namespace TodoApi.Controllers
             _context.Matrices.Add(matrix);
             await _context.SaveChangesAsync();
 
-            return Ok(new { message = "OK" });
+            return Ok();
         }
 
         [HttpDelete]
